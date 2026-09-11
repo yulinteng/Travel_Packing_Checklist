@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>出國攜帶物品清單</title>
+<style>
+:root {
+  --bg: #f7f7f5;
+  --card: #ffffff;
+  --text: #252525;
+  --muted: #777;
+  --border: #deded9;
+  --accent: #3f6f9f;
+  --accent-soft: #eef3f7;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 20px 45px;
+}
+h1 {
+  margin: 0 0 5px;
+  text-align: left;
+  font-size: 28px;
+  letter-spacing: .02em;
+}
+.subtitle {
+  text-align: left;
+  color: var(--muted);
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+.progress-wrap {
+  background: var(--card);
+  border: 1px solid #d9ddd8;
+  border-radius: 10px;
+  padding: 15px 17px 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(30, 40, 35, .05);
+}
+.progress-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 11px;
+  font-size: 15px;
+}
+.progress-label {
+  color: #4b5563;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.progress-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+}
+.progress-value #progressPercent {
+  min-width: 43px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #eef3f7;
+  color: #294e70;
+  text-align: center;
+  font-size: 13px;
+}
+.progress {
+  height: 10px;
+  background: #e9ece8;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .08);
+}
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #5c9a73, #3f8060);
+  border-radius: 999px;
+  transition: width .3s ease;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  padding-bottom: 0;
+  margin-bottom: 12px;
+  overflow-x: visible;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  flex: 0 0 auto;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: transparent;
+  color: #666;
+  border-radius: 0;
+  padding: 9px 15px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.tab.has-missing {
+  color: #b42318;
+  background: #fff3f1;
+  border-bottom: 2px solid #d95c50;
+  font-weight: 700;
+}
+.category-title.has-missing {
+  color: #b42318;
+  background: #fff3f1;
+  border: 1px solid #e7aaa4;
+  border-radius: 2px;
+  padding: 7px 9px;
+}
+.category-title.all-packed {
+  color: #18804b;
+  background: #e8f5ed;
+  font-weight: 700;
+  border: 1px solid #a9d8bc;
+  border-radius: 2px;
+  padding: 7px 9px;
+}
+.category-title.all-not-needed {
+  color: #6b7280;
+  background: #eef0f2;
+  font-weight: 700;
+  text-decoration: line-through;
+  border: 1px solid #d2d6db;
+  border-radius: 2px;
+  padding: 7px 9px;
+}
+.tab.active {
+  background: #e9eef3;
+  border-bottom: 2px solid var(--accent);
+  color: #294e70;
+  font-weight: 700;
+}
+.tab.all-packed {
+  color: #18804b;
+  background: #e8f5ed;
+  font-weight: 700;
+}
+.tab.all-not-needed {
+  color: #6b7280;
+  background: #eef0f2;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+.category {
+  display: none;
+}
+.category.active {
+  display: block;
+}
+.category-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+.list {
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: background .12s;
+}
+.item:last-child { border-bottom: none; }
+.item:hover { background: #f3f3ef; }
+.item.checked:hover { background: #f4faf5; }
+.item.not-needed:hover { background: #f5f6f7; }
+.item.final-missing:hover { background: #fff1f2; }
+.checkbox {
+  display: none;
+  width: 27px;
+  height: 27px;
+  border: 2px solid #aeb6c0;
+  border-radius: 7px;
+  flex: 0 0 27px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}
+.item.checked .checkbox {
+  background: #22a06b;
+  border-color: #22a06b;
+}
+.item.checked {
+  background: #f4faf5;
+  border-left: 4px solid #5c9a73;
+}
+.item.checked .name {
+  color: #2f6f48;
+  background: transparent;
+  border: none;
+  text-decoration: none;
+  font-weight: 700;
+}
+.name {
+  font-size: 17px;
+  line-height: 1.5;
+  flex: 1;
+  display: block;
+  width: 100%;
+  padding: 7px 4px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s, border-color .15s;
+}
+.name:hover {
+  background: transparent;
+  border: none;
+}
+.status-actions {
+  display: flex;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.status-btn {
+  width: 34px;
+  height: 34px;
+  border: 2px solid #c2c8cf;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: bold;
+}
+.status-btn:hover { background: #f5f7f9; }
+.status-btn.packed.active {
+  background: #22a06b;
+  border-color: #22a06b;
+  color: white;
+}
+.status-btn.not-needed.active {
+  background: #8a929d;
+  border-color: #8a929d;
+  color: white;
+}
+.item.not-needed {
+  background: #f5f6f7;
+}
+.item.not-needed .name {
+  color: #aaa;
+  background: transparent;
+  border: none;
+  text-decoration: line-through;
+}
+
+
+@media (max-width: 700px) {
+  h1 { font-size: 25px; }
+  .container { padding-top: 20px; }
+  .name { font-size: 16px; }
+
+  /* Keep the category tabs evenly aligned on mobile. */
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+  .tab {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 9px 6px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .tab:nth-child(3n) {
+    border-right: none;
+  }
+  .tab.has-missing,
+  .tab.active {
+    border-bottom-width: 2px;
+  }
+}
+
+.final-check {
+  margin-top: 18px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.final-check-actions {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.final-check-btn {
+  flex: 1;
+  border: 1px solid #4f7fb8;
+  background: #1976d2;
+  color: #fff;
+  border-radius: 5px;
+  padding: 11px 15px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .05s;
+}
+.final-check-btn:hover {
+  background: #1565c0;
+  border-color: #416b9c;
+}
+.final-check-btn.check-success {
+  background: #2e9e5b;
+  border-color: #5c9a73;
+  color: #fff;
+}
+.final-check-btn.check-success:hover {
+  background: #23864b;
+  border-color: #4f8765;
+}
+.final-check-btn.check-warning {
+  background: #e53935;
+  border-color: #d95c50;
+  color: #fff;
+}
+.final-check-btn.check-warning:hover {
+  background: #c62828;
+  border-color: #c94b4b;
+}
+.final-check-btn:active,
+.clear-all-btn:active {
+  transform: translateY(1px);
+}
+.clear-all-btn {
+  flex: 0 0 130px;
+  border: 1px solid #d1d5db;
+  background: #f8f8f7;
+  color: #555;
+  border-radius: 5px;
+  padding: 11px 16px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.clear-all-btn:hover {
+  background: #f0f0ee;
+  border-color: #bfc3c8;
+}
+.final-result {
+  margin-top: 12px;
+  display: none;
+  background: #fff;
+  border-radius: 5px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  line-height: 1.6;
+}
+.final-result.success {
+  display: block;
+  border-color: #9bd3ae;
+  background: #f3faf5;
+  color: #287044;
+}
+.final-result.warning {
+  display: block;
+  border-color: #efb0b0;
+  background: #fff5f5;
+  color: #a12b2b;
+}
+.final-result-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+.missing-list {
+  margin: 8px 0 0;
+  padding-left: 22px;
+}
+.missing-list li {
+  margin: 5px 0;
+  color: #e05252;
+  font-weight: 600;
+}
+.item.final-missing {
+  background: #fff1f2;
+  border-left: 4px solid #ef4444;
+}
+.item.final-missing .name {
+  color: #e05252;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+
+.category-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 2px 8px;
+}
+.category-title-row .category-title {
+  margin: 0;
+}
+.category-actions {
+  display: flex;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.category-action-btn {
+  border: 1px solid #c7ccd3;
+  background: #fff;
+  color: #6b7280;
+  border-radius: 3px;
+  padding: 6px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 400;
+}
+.category-action-btn:hover { background: #f3f4f6; }
+.category-action-btn.packed { color: #6b7280; }
+.category-action-btn.not-needed { color: #6b7280; }
+.category-action-btn.clear { color: #6b7280; }
+.category-action-btn.packed.active {
+  color: #18804b;
+  background: #e8f5ed;
+  border-color: #9bc9ad;
+  font-weight: 700;
+}
+.category-action-btn.not-needed.active {
+  color: #6b7280;
+  background: #eef0f2;
+  border-color: #c9cdd2;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+.category-action-btn.clear.active {
+  color: #6b7280;
+  background: #eef0f2;
+  border-color: #c9cdd2;
+  font-weight: 700;
+}
+
+
+@media (max-width: 600px) {
+  .final-check {
+    padding: 12px;
+  }
+  .final-check-actions {
+    gap: 8px;
+  }
+  .clear-all-btn {
+    flex: 0 0 92px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>✈️ 出國攜帶物品清單</h1>
+
+  <div class="progress-wrap">
+    <div class="progress-text">
+      <span class="progress-label">打包進度</span>
+      <span class="progress-value"><span id="progressText">0 / 33</span><span id="progressPercent">0%</span></span>
+    </div>
+    <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  </div>
+<div class="tabs" id="tabs"></div>
+  <div id="categories"></div>
+
+  <div class="final-check">
+    <div class="final-check-actions">
+      <button type="button" class="final-check-btn" onclick="finalCheck()">🔍 最終檢查</button>
+      <button type="button" class="clear-all-btn" onclick="clearAll()">↺ 重置</button>
+    </div>
+    <div id="finalResult" class="final-result"></div>
+  </div>
+</div>
+
+<script>
+const categoryIcons = {
+  "證件": "🪪",
+  "衣物": "👕",
+  "盥洗": "🧴",
+  "化妝": "💄",
+  "3C": "📱",
+  "收納": "🧳",
+  "戶外": "🌲",
+  "其他": "📦",
+  "滑雪": "⛷️"
+};
+
+const data = {
+  "證件": [
+    "護照",
+    "駕照＋日譯本",
+    "日幣＋西瓜卡"
+  ],
+  "衣物": [
+    "衣服、褲子",
+    "貼身衣物",
+    "睡衣",
+    "襪子",
+    "禦寒外套",
+    "手套",
+    "帽子",
+    "圍巾"
+  ],
+  "盥洗": [
+    "洗面乳",
+    "牙刷",
+    "牙膏",
+    "毛巾",
+    "刷背巾",
+    "刮鬍刀",
+    "隱形眼鏡＋藥水",
+    "眼鏡、眼鏡盒",
+    "面紙、濕紙巾"
+  ],
+  "化妝": [
+    "化妝棉",
+    "化妝水",
+    "乳液",
+    "粉底",
+    "護唇膏",
+    "護手霜",
+    "衛生棉"
+  ],
+  "3C": [
+    "手機充電器＋USB 線",
+    "行動電源",
+    "車充",
+    "insta360相機套裝",
+    "延長線",
+    "行車紀錄器"
+  ],
+  "收納": [
+    "便利購物袋",
+    "收納袋＋抽真空機",
+    "行李秤",
+    "髒衣袋",
+    "摺疊衣架"
+  ],
+  "戶外": [
+    "太陽眼鏡",
+    "雨傘",
+    "雨衣",
+    "保溫杯",
+    "防曬乳"
+  ],
+  "滑雪": [
+    "安全帽",
+    "雪鏡",
+    "面罩",
+    "雪衣",
+    "雪褲",
+    "滑雪手套＋護腕",
+    "小手套",
+    "護膝",
+    "護臀",
+    "雪襪"
+  ],
+  "其他": [
+    "常備用藥（暈車藥、腸胃藥、止痛藥、蚊蟲藥、急救包、感冒藥等日常用藥）",
+    "酒精",
+    "口罩"
+  ]
+};
+
+const STORAGE_KEY = "travelPackingChecklist_v2";
+let checked = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+let currentCategory = Object.keys(data)[0];
+let finalCheckActive = false;
+
+const total = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
+document.getElementById("progressText").textContent = `0 / ${total}`;
+
+function key(category, item) {
+  return category + "::" + item;
+}
+
+function render() {
+  const tabs = document.getElementById("tabs");
+  const categories = document.getElementById("categories");
+  tabs.innerHTML = "";
+  categories.innerHTML = "";
+
+  Object.entries(data).forEach(([category, items]) => {
+    const tab = document.createElement("button");
+    const hasMissing = finalCheckActive &&
+      items.some(item => {
+        const status = checked[key(category, item)];
+        return status !== "packed" && status !== "not-needed";
+      });
+
+    const categoryStatuses = items.map(item => checked[key(category, item)] || "");
+    const allPacked = categoryStatuses.every(status => status === "packed");
+    const allNotNeeded = categoryStatuses.every(status => status === "not-needed");
+
+    tab.className = "tab" +
+      (category === currentCategory ? " active" : "") +
+      (hasMissing ? " has-missing" : "") +
+      (allPacked ? " all-packed" : "") +
+      (allNotNeeded ? " all-not-needed" : "");
+
+    const done = items.filter(item => checked[key(category,item)] === "packed" || checked[key(category,item)] === "not-needed").length;
+    tab.textContent = `${categoryIcons[category] || ""} ${category} ${done}/${items.length}`;
+    tab.onclick = () => {
+      currentCategory = category;
+      render();
+    };
+    tabs.appendChild(tab);
+
+    const section = document.createElement("section");
+    section.className = "category" + (category === currentCategory ? " active" : "");
+
+    const titleRow = document.createElement("div");
+    titleRow.className = "category-title-row";
+
+    const categoryHasMissing = finalCheckActive &&
+      items.some(item => {
+        const status = checked[key(category, item)];
+        return status !== "packed" && status !== "not-needed";
+      });
+
+    const title = document.createElement("div");
+    title.className = "category-title" +
+      (categoryHasMissing ? " has-missing" : "") +
+      (allPacked ? " all-packed" : "") +
+      (allNotNeeded ? " all-not-needed" : "");
+    title.textContent = `${categoryIcons[category] || ""} ${category}`;
+
+    const categoryActions = document.createElement("div");
+    categoryActions.className = "category-actions";
+
+    const categoryPackedBtn = document.createElement("button");
+    categoryPackedBtn.className = "category-action-btn packed";
+    categoryPackedBtn.textContent = "已全帶";
+    categoryPackedBtn.title = "整個分類都已帶";
+    categoryPackedBtn.onclick = (e) => {
+      e.stopPropagation();
+      markCategoryPacked(category);
+    };
+
+    const categorySkipBtn = document.createElement("button");
+    categorySkipBtn.className = "category-action-btn not-needed";
+    categorySkipBtn.textContent = "全不帶";
+    categorySkipBtn.title = "整個分類都不帶";
+    categorySkipBtn.onclick = (e) => {
+      e.stopPropagation();
+      markCategoryNotNeeded(category);
+    };
+
+    const categoryClearBtn = document.createElement("button");
+    categoryClearBtn.className = "category-action-btn clear";
+    categoryClearBtn.textContent = "全清除";
+    categoryClearBtn.title = "清除整個分類的狀態";
+    categoryClearBtn.onclick = (e) => {
+      e.stopPropagation();
+      clearCategory(category);
+    };
+
+    if (allPacked) categoryPackedBtn.classList.add("active");
+    if (allNotNeeded) categorySkipBtn.classList.add("active");
+
+    categoryActions.appendChild(categoryPackedBtn);
+    categoryActions.appendChild(categorySkipBtn);
+    categoryActions.appendChild(categoryClearBtn);
+    titleRow.appendChild(title);
+    titleRow.appendChild(categoryActions);
+    section.appendChild(titleRow);
+
+    const list = document.createElement("div");
+    list.className = "list";
+
+    items.forEach(item => {
+      const k = key(category, item);
+      const status = checked[k] || "";
+
+      const row = document.createElement("div");
+      const isMissing = finalCheckActive &&
+        status !== "packed" &&
+        status !== "not-needed";
+
+      row.className = "item" +
+        (status === "packed" ? " checked" : "") +
+        (status === "not-needed" ? " not-needed" : "") +
+        (isMissing ? " final-missing" : "");
+
+      const name = document.createElement("button");
+      name.type = "button";
+      name.className = "name";
+      name.textContent = item;
+      name.title = status === "packed" ? "已帶（再按一次取消）" : "點擊標記為已帶";
+      name.onclick = (e) => {
+        e.stopPropagation();
+        setStatus(category, item, "packed");
+      };
+
+      const actions = document.createElement("div");
+      actions.className = "status-actions";
+
+      const notNeededBtn = document.createElement("button");
+      notNeededBtn.type = "button";
+      notNeededBtn.className = "status-btn not-needed" + (status === "not-needed" ? " active" : "");
+      notNeededBtn.textContent = "X";
+      notNeededBtn.title = "不帶";
+      notNeededBtn.onclick = (e) => {
+        e.stopPropagation();
+        setStatus(category, item, "not-needed");
+      };
+
+      actions.appendChild(notNeededBtn);
+      row.appendChild(name);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+
+    section.appendChild(list);
+    categories.appendChild(section);
+  });
+
+  updateProgress();
+  updateFinalCheckState();
+}
+
+function updateFinalCheckState() {
+  const finalBtn = document.querySelector(".final-check-btn");
+  if (!finalBtn) return;
+
+  finalBtn.classList.remove("check-success", "check-warning");
+
+  // 尚未進入最終檢查時，維持預設藍色。
+  if (!finalCheckActive) return;
+
+  const missing = [];
+  Object.entries(data).forEach(([category, items]) => {
+    items.forEach(item => {
+      const status = checked[key(category, item)];
+      if (status !== "packed" && status !== "not-needed") {
+        missing.push({ category, item });
+      }
+    });
+  });
+
+  finalBtn.classList.add(missing.length === 0 ? "check-success" : "check-warning");
+
+  const result = document.getElementById("finalResult");
+  if (!result) return;
+
+  if (missing.length === 0) {
+    result.className = "final-result success";
+    result.innerHTML = `
+      <div class="final-result-title">🎉 最終檢查完成！</div>
+      <div>所有物品都已確認，打包進度為 <strong>100%</strong>。</div>
+    `;
+  } else {
+    result.className = "final-result warning";
+    const grouped = {};
+    missing.forEach(({category, item}) => {
+      if (!grouped[category]) grouped[category] = [];
+      grouped[category].push(item);
+    });
+
+    let listHtml = "";
+    Object.entries(grouped).forEach(([category, items]) => {
+      listHtml += `<div style="margin-top:10px;"><strong>${category}</strong></div>`;
+      listHtml += `<ul class="missing-list">`;
+      items.forEach(item => {
+        listHtml += `<li>${item}</li>`;
+      });
+      listHtml += `</ul>`;
+    });
+
+    result.innerHTML = `
+      <div class="final-result-title">⚠️ 尚有 ${missing.length} 項物品未確認</div>
+      <div>以下物品尚未選擇「已帶」或「不帶」：</div>
+      ${listHtml}
+    `;
+  }
+}
+
+function setStatus(category, item, status) {
+  const k = key(category, item);
+  // 同一個狀態再次點擊 = 取消狀態
+  if (checked[k] === status) {
+    delete checked[k];
+  } else {
+    // 「已帶」與「不帶」互斥
+    checked[k] = status;
+  }
+  save();
+  render();
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+}
+
+function cleanupOldSavedItems() {
+  const validKeys = new Set();
+  Object.entries(data).forEach(([category, items]) => {
+    items.forEach(item => validKeys.add(key(category, item)));
+  });
+
+  let changed = false;
+  Object.keys(checked).forEach(k => {
+    if (!validKeys.has(k)) {
+      delete checked[k];
+      changed = true;
+    }
+  });
+
+  if (changed) save();
+}
+
+function updateProgress() {
+  let packed = 0;
+  let notNeeded = 0;
+
+  Object.entries(data).forEach(([category, items]) => {
+    items.forEach(item => {
+      const status = checked[key(category, item)];
+      if (status === "packed") {
+        packed++;
+      } else if (status === "not-needed") {
+        notNeeded++;
+      }
+    });
+  });
+
+  const denominator = total - notNeeded;
+  const percent = denominator > 0 ? (packed / denominator) * 100 : 100;
+
+  document.getElementById("progressText").textContent = `${packed} / ${denominator}`;
+  document.getElementById("progressPercent").textContent = `${Math.round(percent)}%`;
+  document.getElementById("progressBar").style.width = `${percent}%`;
+}
+
+
+
+
+function clearCategory(category) {
+  data[category].forEach(item => {
+    delete checked[key(category, item)];
+  });
+  save();
+  render();
+}
+
+function markCategoryPacked(category) {
+  data[category].forEach(item => {
+    checked[key(category, item)] = "packed";
+  });
+  save();
+  render();
+}
+
+function markCategoryNotNeeded(category) {
+  data[category].forEach(item => {
+    checked[key(category, item)] = "not-needed";
+  });
+  save();
+  render();
+}
+
+
+function clearAll() {
+  checked = {};
+  finalCheckActive = false;
+  save();
+
+  const result = document.getElementById("finalResult");
+  if (result) {
+    result.className = "final-result";
+    result.innerHTML = "";
+  }
+
+  render();
+}
+
+function finalCheck() {
+  // 再按一次「Final Check」：關閉紅色警示並恢復檢查前的顯示。
+  if (finalCheckActive) {
+    finalCheckActive = false;
+    const finalBtn = document.querySelector(".final-check-btn");
+    if (finalBtn) finalBtn.classList.remove("check-success", "check-warning");
+    const result = document.getElementById("finalResult");
+    if (result) {
+      result.className = "final-result";
+      result.innerHTML = "";
+    }
+    render();
+    return;
+  }
+
+  const missing = [];
+
+  Object.entries(data).forEach(([category, items]) => {
+    items.forEach(item => {
+      const status = checked[key(category, item)];
+      if (status !== "packed" && status !== "not-needed") {
+        missing.push({ category, item });
+      }
+    });
+  });
+
+  // 啟用最終檢查標示，讓所有尚未確認的項目名稱變紅。
+  finalCheckActive = true;
+  render();
+  return;
+
+  const result = document.getElementById("finalResult");
+
+  if (missing.length === 0) {
+    result.className = "final-result success";
+    result.innerHTML = `
+      <div class="final-result-title">🎉 最終檢查完成！</div>
+      <div>所有物品都已確認，打包進度為 <strong>100%</strong>。</div>
+    `;
+  } else {
+    result.className = "final-result warning";
+    const grouped = {};
+    missing.forEach(({category, item}) => {
+      if (!grouped[category]) grouped[category] = [];
+      grouped[category].push(item);
+    });
+
+    let listHtml = "";
+    Object.entries(grouped).forEach(([category, items]) => {
+      listHtml += `<div style="margin-top:10px;"><strong>${category}</strong></div>`;
+      listHtml += `<ul class="missing-list">`;
+      items.forEach(item => {
+        listHtml += `<li>${item}</li>`;
+      });
+      listHtml += `</ul>`;
+    });
+
+    result.innerHTML = `
+      <div class="final-result-title">⚠️ 還有 ${missing.length} 項需要確認</div>
+      <div>以下物品尚未選擇「已帶」或「不帶」：</div>
+      ${listHtml}
+    `;
+  }
+
+  result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+cleanupOldSavedItems();
+render();
+</script>
+</body>
+</html>
